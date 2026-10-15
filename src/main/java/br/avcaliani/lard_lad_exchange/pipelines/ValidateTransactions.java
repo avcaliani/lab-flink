@@ -16,7 +16,7 @@ import static org.apache.flink.connector.base.DeliveryGuarantee.EXACTLY_ONCE;
 
 /**
  * This Pipeline reads the data from a Kafka stream, enrich the data and output to another topic.
- * </br>
+ * <br/>
  * Here's the guide I used to create this 👉
  * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/">
  * Doc: Apache Flink + Kafka Connector
@@ -40,7 +40,7 @@ public class ValidateTransactions extends Pipeline {
         );
 
         var richTxn = joinData(transactions, users)
-                .map(this::isTxnValid);
+                .map(ValidateTransactions::isTxnValid);
 
         var validSink = kafka.<DTOTransaction>sink(
                 "DONU_EXECUTE_TRANSACTION_V1", /* Topic */
@@ -62,7 +62,7 @@ public class ValidateTransactions extends Pipeline {
      *
      * @return Updated Transaction.
      */
-    private DTOTransaction isTxnValid(DTOTransaction txn) {
+    static DTOTransaction isTxnValid(DTOTransaction txn) {
 
         var isMissingUser = txn.getSender() == null || txn.getReceiver() == null;
         var isSameUser = txn.getSender() == txn.getReceiver();
@@ -107,7 +107,7 @@ public class ValidateTransactions extends Pipeline {
      * Doc: Apache Flink - The Broadcast State Pattern
      * </a>
      */
-    private static class EnrichTxnFunction extends BroadcastProcessFunction<Transaction, User, DTOTransaction> {
+    static class EnrichTxnFunction extends BroadcastProcessFunction<Transaction, User, DTOTransaction> {
 
         private final MapStateDescriptor<String, User> descriptor;
 

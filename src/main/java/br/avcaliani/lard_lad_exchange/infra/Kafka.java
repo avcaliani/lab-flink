@@ -4,7 +4,6 @@ import br.avcaliani.lard_lad_exchange.infra.serializers.KafkaDeserializer;
 import br.avcaliani.lard_lad_exchange.infra.serializers.KafkaMessage;
 import br.avcaliani.lard_lad_exchange.infra.serializers.KafkaSerializer;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.connector.sink2.Sink;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -18,7 +17,7 @@ import static org.apache.flink.connector.base.DeliveryGuarantee.EXACTLY_ONCE;
 /**
  * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/kafka/">
  * Flink + Kafka Documentation
- * <a/>
+ * </a>
  */
 public class Kafka extends Infra {
 
@@ -54,23 +53,26 @@ public class Kafka extends Infra {
      * Create a Kafka Sink for a specific topic.
      * <br/><br/>
      * <b>Something about EXACTLY_ONCE...</b><br/>
-     * <p><i>
-     * "Kafka brokers by default have transaction.max.timeout.ms set to 15 minutes.<br/>
-     * This property will not allow to set transaction timeouts for the producers larger than its value.<br/>
-     * FlinkKafkaProducer by default sets the transaction.timeout.ms property in producer config to 1 hour,
-     * thus transaction.max.timeout.ms should be increased before using the Semantic.EXACTLY_ONCE mode."<i/> -
-     * <a href="https://nightlies.apache.org/flink/flink-docs-release-1.13/docs/connectors/datastream/kafka/">Reference Doc</a>
-     * </p>
-     * Another reference on
+     * Brokers have <code>transaction.max.timeout.ms</code> set to 15 minutes by default, and they reject producers
+     * asking for a larger <code>transaction.timeout.ms</code>.
+     * <code>KafkaSink</code> asks for 1 hour by default, so the timeout is lowered to 15 minutes here.
+     * Keep it larger than the checkpoint interval plus the time the job needs to recover.
+     * <br/>
+     * Downstream consumers must set <code>isolation.level=read_committed</code>,
+     * otherwise they will also read records from aborted or still open transactions.
+     * <br/><br/>
+     * More details in the
+     * <a href="https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/connectors/datastream/kafka/#fault-tolerance">
+     * KafkaSink fault tolerance docs</a>
+     * and in the post about
      * <a href="https://flink.apache.org/2018/02/28/an-overview-of-end-to-end-exactly-once-processing-in-apache-flink-with-apache-kafka-too/">
-     * how exactly once works.
-     * </a>
+     * how exactly once works</a>.
      *
      * @param topic    Kafka Topic.
      * @param delivery Delivery Strategy.
      * @return Kafka Sink.
      */
-    public <T extends KafkaMessage> Sink<T> sink(String topic, DeliveryGuarantee delivery) {
+    public <T extends KafkaMessage> KafkaSink<T> sink(String topic, DeliveryGuarantee delivery) {
         var sinkBuilder = KafkaSink.<T>builder()
                 .setBootstrapServers(this.brokers)
                 .setRecordSerializer(new KafkaSerializer<>(topic))
@@ -87,7 +89,7 @@ public class Kafka extends Infra {
     /**
      * Documentation 👉 {@link #sink(String, DeliveryGuarantee)}
      */
-    public <T extends KafkaMessage> Sink<T> sink(String topic) {
+    public <T extends KafkaMessage> KafkaSink<T> sink(String topic) {
         return sink(topic, AT_LEAST_ONCE);
     }
 

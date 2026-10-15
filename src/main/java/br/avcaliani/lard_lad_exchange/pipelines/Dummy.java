@@ -15,8 +15,10 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.Csv
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.util.Locale;
+
 /** This Pipeline reads a CSV file, manipulated the data and print the result.
- * </br>
+ * <br/>
  * Here's the guide I used to create this 👉
  * <a href="https://nightlies.apache.org/flink/flink-docs-master/docs/connectors/datastream/formats/csv/">
  *     Doc: Apache Flink + CSV
@@ -40,8 +42,8 @@ public class Dummy extends Pipeline {
     }
 
     /**
-     * Read the users CSVs. </br>
-     * Instead of declaring the columns manually in the schema, you can use a POJO instead.</br>
+     * Read the users CSVs. <br/>
+     * Instead of declaring the columns manually in the schema, you can use a POJO instead.<br/>
      * Example in the <code>ValidateTransactions</code> pipeline.
      *
      * @return CSV Schema.
@@ -77,10 +79,13 @@ public class Dummy extends Pipeline {
      * @param name User name.
      * @return User email.
      */
-    private String buildEmail(String name) {
-        return name.toLowerCase()
+    static String buildEmail(String name) {
+        if (name == null || name.isBlank())
+            return null;
+        return name.trim()
+                .toLowerCase(Locale.ROOT)
                 .replaceAll("\\.", "")
-                .replaceAll(" ", ".")
+                .replaceAll("\\s+", ".")
                 + "@github.com";
     }
 }

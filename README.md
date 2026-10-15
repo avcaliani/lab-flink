@@ -10,7 +10,7 @@
 
 My repository with [Apache Flink](https://flink.apache.org) learnings.
 
-The app name is "Lard Lad Donuts", inspired on Springfield's giant-donut landmark from *The Simpsons*.
+The app name is "Lard Lad Exchange", inspired by Lard Lad Donuts, Springfield's giant-donut landmark from *The Simpsons*.
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ curl -o "data/raw/users/users.csv" \
 
 #### 02 - Start the containers 🐳
 
-> 💡 [Fink Local Installation](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
+> 💡 [Flink Local Installation](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
 
 ```bash
 # 💡 To stop just type `docker compose down`
@@ -32,7 +32,7 @@ docker compose up -d
 ```
 
 > [!TIP]
-> To check the Kafka Topcis and Messages or Flink Application STDOUT, check the links bellow.  
+> To check the Kafka Topics and Messages or Flink Application STDOUT, check the links below.  
 > - **Kafka UI** ➜ http://localhost:8080  
 > - **Flink Dashboard** ➜ http://localhost:8081
 
@@ -55,6 +55,29 @@ docker compose exec kafka-dev /opt/scripts/donu-transactions.sh
 ./run.sh --pipeline "validate-transactions" \
       --bucket "/data" \
       --kafka-brokers "kafka-dev:29092"
+```
+
+#### 05 - Restart from a checkpoint (optional)
+
+Checkpoints are kept when a job is cancelled, at `data/flink/checkpoint/<job-id>/chk-<n>`.  
+To resume from one, pass `-s` as the **first** argument of the script.
+
+```bash
+./run.sh -s "/data/flink/checkpoint/<job-id>/chk-<n>" \
+      --pipeline "validate-transactions" \
+      --bucket "/data" \
+      --kafka-brokers "kafka-dev:29092"
+```
+
+> [!IMPORTANT]
+> The valid transactions topic is written with Kafka transactions (`EXACTLY_ONCE`).  
+> Consumers of that topic must set `isolation.level=read_committed`, otherwise they will also read records
+> from aborted or still open transactions.
+
+## Tests
+
+```bash
+./gradlew test
 ```
 
 ## Pipeline - Validate Transactions

@@ -1,8 +1,15 @@
+# Settings shared by the Flink services.
+x-flink: &flink
+  image: flink:2.0.0-java17
+  environment:
+    FLINK_PROPERTIES: |
+      jobmanager.rpc.address: flink-jobmanager
+
 services:
 
   # https://hub.docker.com/r/avcaliani/kafka-in-docker
   kafka-dev:
-    image: avcaliani/kafka-in-docker
+    image: avcaliani/kafka-in-docker:1.1.0
     container_name: kafka-dev
     ports:
       - "9092:9092"
@@ -19,18 +26,24 @@ services:
       - ./docker/kafka-ui-config.yml:/etc/kafkaui/dynamic_config.yaml
 
   # https://hub.docker.com/_/flink
-  flink-dev:
-    image: flink:2.0-java17
-    container_name: flink-dev
+  #   The cluster is split in two services, just like in a real deployment.
+  #   Jobs are submitted to the JobManager, check the `run.sh` script.
+  flink-jobmanager:
+    <<: *flink
+    container_name: flink-jobmanager
+    command: jobmanager
     ports:
       - "8081:8081" # Flink UI
     working_dir: /app
     volumes:
       - ./build/libs/:/app
       - ./data/:/data/
-    command:
-      - /bin/sh
-      - -c
-      - |
-        /opt/flink/bin/start-cluster.sh
-        tail -f /dev/null
+
+  flink-taskmanager:
+    <<: *flink
+    container_name: flink-taskmanager
+    command: taskmanager
+    depends_on:
+      - flink-jobmanager
+    volumes:
+      - ./data/:/data/
