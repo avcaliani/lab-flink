@@ -24,7 +24,7 @@ curl -o "data/raw/users/users.csv" \
 
 #### 02 - Start the containers 🐳
 
-> 💡 [Fink Local Installation](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
+> 💡 [Flink Local Installation](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/try-flink/local_installation/)
 
 ```bash
 # 💡 To stop just type `docker compose down`
@@ -32,7 +32,7 @@ docker compose up -d
 ```
 
 > [!TIP]
-> To check the Kafka Topcis and Messages or Flink Application STDOUT, check the links bellow.  
+> To check the Kafka Topics and Messages or Flink Application STDOUT, check the links below.  
 > - **Kafka UI** ➜ http://localhost:8080  
 > - **Flink Dashboard** ➜ http://localhost:8081
 
